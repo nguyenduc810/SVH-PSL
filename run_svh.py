@@ -29,17 +29,18 @@ set_seed(42)
 dic = {'zdt1':[0.9994, 6.0576],
         'zdt2':[0.9994, 6.8960],
         'zdt3':[0.9994, 6.0571],
-        'dtlz2':[2.8390, 2.9011, 2.8575],
+        'f2':[1.1,1.1],
+        'VLMOP2': [1.1,1.1],
         'RE21':[2886.3695604236013, 0.039999999999998245],
        'RE32':[ 37.7831517014 , 17561.6 ,425062976.628],
        'RE33':[5.3067 , 3.12833430979 , 25.0 ],
        'RE36':[5.931, 56.0, 0.355720675227],
        'RE37':[0.98949120096, 0.956587924661 , 0.987530948586],
        'RE41':[39.2905121788, 4.42725, 13.09138125 ,9.49401929991],
-       'VLMOP2': [1.1,1.1],
+       'RE42':[-1010.5229595219643, 13827.138456300128, 2611.9668107424536, 12.437669929732023]
        }
 
-ins_list = ['zdt3']
+ins_list = ['RE42']
 get_kernel = False
 # number of independent runs
 n_run = 5
@@ -50,11 +51,11 @@ n_iter = 20
 batch_size = 5
 # PSL 
 # number of learning steps
-n_steps = 500
+n_steps = 2000
 # coefficient of LCB
 coef_lcb = 0.1
 # number of sampled candidates on the approxiamte Pareto front
-n_candidate = 1000
+# n_candidate = 1000
 
 n_candidate = 1000
 local_kernel= True
@@ -63,10 +64,10 @@ binary = True
 # device
 def get_device(no_cuda=False, gpus=None):
     return torch.device(f"cuda:{gpus}" if torch.cuda.is_available() and not no_cuda else "cpu")
-device=get_device(gpus ='0')
+device=get_device(gpus ='2')
 
 c_ = 1
-alpha_ = 0.001
+alpha_ = 0.1
 lr_ = 1e-3
 
 print(device)
@@ -99,7 +100,7 @@ for test_ins in ins_list:
     ref_point = dic[test_ins]
 
     name = f'c_{c_}_alpha_{alpha_}_lr_{lr_}_steps_{n_steps}_n_cand{n_candidate}_{n_obj}_{n_dim}_batch_sizes_{batch_size}'
-    suffix=f"_stein_local"
+    suffix=f"_stein_local_{local_kernel}"
     suffix_dir = ""
     
     if not os.path.exists(f"result/SVH_PSL/batch_{batch_size}/logs_{test_ins}{suffix}_{name}"):
@@ -217,28 +218,28 @@ for test_ins in ins_list:
 
 
                 # select checkpoint weights Pareto set model
-                Y_p = Y_nds.detach().cpu().numpy()
-                pref_vec  = torch.Tensor(pref_vec_test).to(device).float()
-                x = psmodel(pref_vec)
-                Y_candidate_mean__, Y_candidata_std__ = surrogate_model.predict(x)
-                Y_candidate_mean__ = torch.stack(Y_candidate_mean__)
-                Y_candidata_std__ = torch.stack(Y_candidata_std__)
-                Y_ = Y_candidate_mean__ - coef_lcb*Y_candidata_std__
-                Y_ = Y_.T.detach().cpu().numpy()
-                hv = HV(ref_point=np.max(np.vstack([Y_p,Y_]), axis = 0))
-                hv_value_eval_psmodel = hv(Y_)
+                # Y_p = Y_nds.detach().cpu().numpy()
+                # pref_vec  = torch.Tensor(pref_vec_test).to(device).float()
+                # x = psmodel(pref_vec)
+                # Y_candidate_mean__, Y_candidata_std__ = surrogate_model.predict(x)
+                # Y_candidate_mean__ = torch.stack(Y_candidate_mean__)
+                # Y_candidata_std__ = torch.stack(Y_candidata_std__)
+                # Y_ = Y_candidate_mean__ - coef_lcb*Y_candidata_std__
+                # Y_ = Y_.T.detach().cpu().numpy()
+                # hv = HV(ref_point=np.max(np.vstack([Y_p,Y_]), axis = 0))
+                # hv_value_eval_psmodel = hv(Y_)
 
 
-                if not os.path.exists('weights'):
-                    os.makedirs('weights')
-                if hv_max <= hv_value_eval_psmodel:
-                    hv_max = hv_value_eval_psmodel
-                    torch.save(psmodel,f'weights/{test_ins}{suffix}_{name}.pt')
+                # if not os.path.exists('weights'):
+                #     os.makedirs('weights')
+                # if hv_max <= hv_value_eval_psmodel:
+                #     hv_max = hv_value_eval_psmodel
+                #     torch.save(psmodel,f'weights/{test_ins}{suffix}_{name}.pt')
 
 
             print(f"   Training completed:   Time: {(time.time() - start)/60:.2f} min")
-            if hv_max >0:
-                psmodel = torch.load(f'weights/{test_ins}{suffix}_{name}.pt', map_location=device)
+            # if hv_max >0:
+            #     psmodel = torch.load(f'weights/{test_ins}{suffix}_{name}.pt', map_location=device)
             psmodel.eval()
 
             # solutions selection on the learned Pareto set
