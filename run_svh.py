@@ -29,18 +29,18 @@ set_seed(42)
 dic = {'zdt1':[0.9994, 6.0576],
         'zdt2':[0.9994, 6.8960],
         'zdt3':[0.9994, 6.0571],
-        'dtlz2':[2.8390, 2.9011, 2.8575],
         'RE21':[2886.3695604236013, 0.039999999999998245],
        'RE32':[ 37.7831517014 , 17561.6 ,425062976.628],
        'RE33':[5.3067 , 3.12833430979 , 25.0 ],
        'RE36':[5.931, 56.0, 0.355720675227],
        'RE37':[0.98949120096, 0.956587924661 , 0.987530948586],
        'RE41':[39.2905121788, 4.42725, 13.09138125 ,9.49401929991],
+       'RE42': [-844.714092162, 13827.1384409, 5707.50786547, 3207.0456123],
        'VLMOP2': [1.1,1.1],
+       "F2": [1.1,1.1]
        }
 
-ins_list = ['zdt3']
-get_kernel = False
+ins_list = ['zdt1', 'zdt2', 'zdt3', 'VLMOP2','F2', 'RE21', 'RE32', 'RE33', 'RE36', 'RE37', 'RE41', 'RE42']
 # number of independent runs
 n_run = 5
 # number of initialized solutions
@@ -50,15 +50,13 @@ n_iter = 20
 batch_size = 5
 # PSL 
 # number of learning steps
-n_steps = 500
+n_steps = 1000
 # coefficient of LCB
 coef_lcb = 0.1
 # number of sampled candidates on the approxiamte Pareto front
 n_candidate = 1000
 
-n_candidate = 1000
 local_kernel= True
-binary = True
 
 # device
 def get_device(no_cuda=False, gpus=None):
@@ -80,15 +78,15 @@ hv_list = {}
 for test_ins in ins_list:
     print(test_ins)
 
-    if test_ins in ['VLMOP2']:
+    if test_ins in ['VLMOP2','F2']:
         n_dim = 6
     elif test_ins in ['zdt1','zdt2','zdt3']:
-        n_dim = 20
+        n_dim = 30
 
     hv_all_value = np.zeros([n_iter])
     # problem = get_problem(test_ins, n_dim = n_dim)
     if test_ins.startswith('zdt'):
-        problem = get_problem_pymoo(test_ins, n_var=20)
+        problem = get_problem_pymoo(test_ins, n_var=n_dim)
         n_dim = problem.n_var
         n_obj = problem.n_obj
     else:
